@@ -1,1 +1,2 @@
-PRE_INCLUDES=${HOLDIR}/examples/PSL/path ${HOLDIR}/examples/PSL/regexp
+PRE_INCLUDES=../../path ../../regexp
+INCLUDES=../official-semantics

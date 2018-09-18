@@ -1487,14 +1487,23 @@ val da_step_regexp2na = prove
    >> Induct (* 2 subgoals *)
    >- RW_TAC arith_ss
       [calc_transitions_def, EXISTS_MEM, MEM, transition_regexp2na_def]
-   >> RW_TAC arith_ss
-      [calc_transitions_def, EXISTS_MEM, MEM, transition_regexp2na_def]
-   >> Know `!a b. ~(a < b) /\ a < SUC b = (a = b)` >- DECIDE_TAC
-   >> STRIP_TAC
-   >> EQ_TAC
-   >> RW_TAC arith_ss []
-   >> RW_TAC arith_ss []
-   >> METIS_TAC []);
+   >> GEN_TAC >> ONCE_REWRITE_TAC [calc_transitions_def]
+   >> RW_TAC arith_ss [EXISTS_MEM, MEM, transition_regexp2na_def] (* 2 subgoals *)
+   >| [ EQ_TAC >> rpt STRIP_TAC >> ASM_REWRITE_TAC [] >|
+        [ fs [] >> DISJ2_TAC >> Q.EXISTS_TAC `s` >> ASM_REWRITE_TAC [],
+          fs [] >> DISJ2_TAC >> Q.EXISTS_TAC `y` >> ASM_REWRITE_TAC [],
+          Cases_on `x = n` >- ASM_REWRITE_TAC [] \\
+          DISJ2_TAC \\
+          `!a b. ~(a < b) /\ a < SUC b = (a = b)` by DECIDE_TAC \\
+          `x < n` by PROVE_TAC [] >> ASM_REWRITE_TAC [] \\
+          Q.EXISTS_TAC `y` >> ASM_REWRITE_TAC [] ],
+        EQ_TAC >> rpt STRIP_TAC >> ASM_REWRITE_TAC [] >|
+        [ fs [] >> DISJ2_TAC >> Q.EXISTS_TAC `y` >> ASM_REWRITE_TAC [],
+          Cases_on `x < n`
+          >- (ASM_REWRITE_TAC [] >> DISJ2_TAC >> Q.EXISTS_TAC `y` >> ASM_REWRITE_TAC []) \\
+          `!a b. ~(a < b) /\ a < SUC b = (a = b)` by DECIDE_TAC \\
+          `x = n` by PROVE_TAC [] \\
+          METIS_TAC [] ] ]);
 
 val amatch = store_thm
   ("amatch",
