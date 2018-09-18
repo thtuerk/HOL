@@ -898,6 +898,7 @@ val na_match_or = prove
                (!x : num. P x ==> (Q x = R x)) ==>
                ((?x. P x /\ Q x) = (?x. P x /\ R x))``)
        >> RW_TAC std_ss []
+       >> rename1 `na_step _ s''' t = na_step (i1,t1,a1) s''' t`
        >> Know `s''' <= i1` >- METIS_TAC [regexp2na_trans] (* was: s'' *)
        >> POP_ASSUM (K ALL_TAC)
        >> STRIP_TAC
@@ -917,6 +918,7 @@ val na_match_or = prove
    >> RW_TAC arith_ss []
    >> MATCH_MP_TAC (PROVE [] ``!x y z. (x ==> (y = z)) ==> (x /\ y = x /\ z)``)
    >> STRIP_TAC
+   >> rename1 `na_step _ (i1 + (s'' + 1)) t  = na_step (i2,t2,a2) s'' t`
    >> Know `s'' <= i2` >- METIS_TAC [regexp2na_trans] (* was: s' *)
    >> POP_ASSUM (K ALL_TAC)
    >> Q.SPEC_TAC (`s''`, `k`)
@@ -937,6 +939,7 @@ val na_match_or = prove
    >> RW_TAC arith_ss []
    >> MATCH_MP_TAC (PROVE [] ``!x y z. (x ==> (y = z)) ==> (x /\ y = x /\ z)``)
    >> STRIP_TAC
+   >> rename1 `na_step _ (i1 + (s'' + 1)) t  = na_step (i2,t2,a2) s'' t`
    >> Q.PAT_X_ASSUM `!x. P x` (MP_TAC o Q.SPEC `s''`) (* was: s' *)
    >> Know `s'' <= i2` >- METIS_TAC [regexp2na_trans]
    >> RW_TAC arith_ss []);
@@ -995,6 +998,8 @@ val na_match_and = prove
    >> CONJ_TAC >- METIS_TAC [regexp2na_trans]
    >> EQ_TAC >- METIS_TAC []
    >> RW_TAC std_ss []
+   >> rename1 `na_step (i2,t2,a2) s''' l`
+   >> rename1 `na_step (i1,t1,a1) s'' l`
    >> Q.EXISTS_TAC `s'' * (i2 + 1) + s'''` (* was: s', s'' *)
    >> Know `s''' <= i2` >- METIS_TAC [regexp2na_trans]
    >> RW_TAC std_ss [DIV_MULT, MOD_MULT]);
@@ -1070,6 +1075,7 @@ val na_match_repeat = prove
    >> CONJ_TAC >- METIS_TAC [regexp2na_trans]
    >> Induct_on `t'`
    >- (RW_TAC arith_ss [na_step_def, APPEND_eq_NIL]
+       >> rename1 `s'' <= i`
        >> REVERSE (Cases_on `a s''`) >- RW_TAC std_ss [] (* was: s' *)
        >> RW_TAC std_ss []
        >> Q.EXISTS_TAC `[]`
@@ -1098,6 +1104,7 @@ val na_match_repeat = prove
                ((?x. A x /\ (P x ==> B x)) = C)``)
        >> CONJ_TAC >- METIS_TAC [regexp2na_trans]
        >> METIS_TAC [])
+   >> rename1 `s'' <= i`
    >> REVERSE (Cases_on `a s''`) >- RW_TAC std_ss [] (* was: s'' *)
    >> RW_TAC std_ss []
    >> HO_MATCH_MP_TAC

@@ -500,6 +500,7 @@ val F_SEM_TRUE_LEMMA =
           THEN FULL_SIMP_TAC arith_ss [xnum_to_def,LENGTH_def,GT_xnum_num_def],
          Q.EXISTS_TAC `i`
           THEN RW_TAC std_ss []
+          THEN rename1 `UF_SEM (CAT (SEL p (0,i − 1),w'')) f`
           THEN Q.EXISTS_TAC `w''` (* was: w' *)
           THEN RW_TAC std_ss []
           THEN Cases_on `p`
@@ -1227,6 +1228,7 @@ val OLD_UF_SEM_UF_SEM =
         [REPEAT DISJ2_TAC
           THEN Q.EXISTS_TAC `j`
           THEN RW_TAC std_ss []
+          THEN rename1 `OLD_UF_SEM (CAT (SEL (FINITE l) (0,j − 1),w'')) f`
           THEN Q.EXISTS_TAC `w''` (* was: w' *)
           THEN RW_TAC arith_ss [FinitePathTheory.LENGTH_RESTN]
           THEN Cases_on `w''`
@@ -1247,6 +1249,7 @@ val OLD_UF_SEM_UF_SEM =
          REPEAT DISJ2_TAC
           THEN Q.EXISTS_TAC `j`
           THEN RW_TAC std_ss [LENGTH_RESTN_INFINITE,LS]
+          THEN rename1 `OLD_UF_SEM (CAT (SEL (INFINITE f') (0,j − 1),w'')) f`
           THEN Q.EXISTS_TAC `w''`
           THEN RW_TAC arith_ss [FinitePathTheory.LENGTH_RESTN]
           THEN Cases_on `w''`
@@ -1267,6 +1270,7 @@ val OLD_UF_SEM_UF_SEM =
          REPEAT DISJ2_TAC
           THEN Q.EXISTS_TAC `j`
           THEN RW_TAC std_ss []
+          THEN rename1 `UF_SEM (CAT (SEL (FINITE l) (0,j − 1),w'')) f`
           THEN Q.EXISTS_TAC `w''`
           THEN RW_TAC arith_ss [FinitePathTheory.LENGTH_RESTN]
           THEN Cases_on `w''`
@@ -1287,6 +1291,7 @@ val OLD_UF_SEM_UF_SEM =
          REPEAT DISJ2_TAC
           THEN Q.EXISTS_TAC `j`
           THEN RW_TAC std_ss [LENGTH_RESTN_INFINITE,LS]
+          THEN rename1 `UF_SEM (CAT (SEL (INFINITE f') (0,j − 1),w'')) f`
           THEN Q.EXISTS_TAC `w''`
           THEN RW_TAC arith_ss [FinitePathTheory.LENGTH_RESTN]
           THEN Cases_on `w''`
