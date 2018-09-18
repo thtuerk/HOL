@@ -13,8 +13,9 @@ app load
 open HolKernel Parse boolLib;
 open bossLib metisLib
 open pairTheory combinTheory listTheory rich_listTheory
-     stringTheory pred_setTheory arithmeticTheory;
+     stringTheory arithmeticTheory;
 open regexpTheory;
+open pred_setTheory;
 
 val () = new_theory "matcher";
 
@@ -217,7 +218,7 @@ val accepting_path_tail = store_thm
          n' <= LENGTH (BUTFIRSTN (SUC n) ks) /\
          (j::js = BUTFIRSTN n' (EL n ks :: BUTFIRSTN (SUC n) ks)) /\ ~p j /\
          ALL_EL p js /\ accepting_path t a j js`
-   >- (Q.PAT_ASSUM `!m. P m` (K ALL_TAC)
+   >- (Q.PAT_X_ASSUM `!m. P m` (K ALL_TAC)
        >> RW_TAC arith_ss [BUTFIRSTN_EL, LENGTH_BUTFIRSTN]
        >> Know `n' + n < LENGTH ks` >- DECIDE_TAC
        >> STRIP_TAC
@@ -229,7 +230,7 @@ val accepting_path_tail = store_thm
        >> Suff `(j = EL (n + n') ks) /\ (js = BUTFIRSTN (SUC (n + n')) ks)`
        >- METIS_TAC []
        >> METIS_TAC [HD, TL, BUTFIRSTN_HD, BUTFIRSTN_TL])
-   >> Q.PAT_ASSUM `!x. P x` MP_TAC
+   >> Q.PAT_X_ASSUM `!x. P x` MP_TAC
    >> SIMP_TAC std_ss [GSYM RIGHT_FORALL_IMP_THM, AND_IMP_INTRO]
    >> DISCH_THEN MATCH_MP_TAC
    >> RW_TAC arith_ss [LENGTH_BUTFIRSTN]
@@ -267,8 +268,8 @@ val dijkstra = store_thm
    SIMP_TAC std_ss [EXISTS_MEM]
    >> recInduct dijkstra_ind
    >> RW_TAC list_ss [dijkstra_def]
-   >> Introduce `partition (t s) w = (x,y)`
-   >> Q.PAT_ASSUM `!x y. P x y` (MP_TAC o Q.SPECL [`x`, `y`])
+(* >> Introduce `partition (t s) w = (x,y)` *)
+   >> Q.PAT_X_ASSUM `!x y. P x y` (MP_TAC o Q.SPECL [`x`, `y`])
    >> RW_TAC std_ss []
    >> RW_TAC std_ss [RIGHT_AND_OVER_OR, EXISTS_OR_THM, GSYM DISJ_ASSOC]
    >> RW_TAC std_ss [DISJ_ASSOC]
@@ -278,7 +279,7 @@ val dijkstra = store_thm
    >- METIS_TAC [EXISTS_MEM]
    >> DISCH_THEN (fn th => REWRITE_TAC [th])
    >> RW_TAC std_ss [GSYM DISJ_ASSOC]
-   >> Q.PAT_ASSUM `X = Y` (K ALL_TAC)
+   >> Q.PAT_X_ASSUM `X = Y` (K ALL_TAC)
    >> Cases_on
       `?q.
          ALL_EL (\k. (k = s) \/ IS_EL k l \/ IS_EL k w) q /\
@@ -287,7 +288,7 @@ val dijkstra = store_thm
        >> Know
           `?q. ALL_EL (\x. IS_EL x l \/ IS_EL x w) q /\ accepting_path t a s q`
        >- (POP_ASSUM STRIP_ASSUME_TAC
-           >> MP_TAC (Q.SPECL [`\k. ~(k = s)`, `t`, `a`, `s`, `l'`]
+           >> MP_TAC (Q.SPECL [`\k. ~(k = s)`, `t`, `a`, `s`, `q`]
                       accepting_path_tail)
            >> RW_TAC std_ss []
            >> Q.EXISTS_TAC `js`
@@ -300,11 +301,10 @@ val dijkstra = store_thm
                >> RW_TAC std_ss [FUN_EQ_THM]
                >> METIS_TAC [])
            >> RW_TAC std_ss []
-(* TODO *)
-           >> Q.PAT_ASSUM `X = BUTFIRSTN N L` MP_TAC
+           >> Q.PAT_X_ASSUM `X = BUTFIRSTN N L` MP_TAC
            >> Cases_on `n`
            >> RW_TAC std_ss [BUTFIRSTN]
-           >> Know `js = TL (BUTFIRSTN n' l')` >- METIS_TAC [TL]
+           >> Know `js = TL (BUTFIRSTN n' q)` >- METIS_TAC [TL]
            >> RW_TAC arith_ss [BUTFIRSTN_TL]
            >> METIS_TAC [ALL_EL_BUTFIRSTN])
        >> POP_ASSUM (K ALL_TAC)
@@ -328,7 +328,7 @@ val dijkstra = store_thm
    >> SIMP_TAC std_ss []
    >> STRIP_TAC
    >> Cases_on `a s`
-   >- (Q.PAT_ASSUM `!x. P x` (MP_TAC o Q.SPEC `[]`)
+   >- (Q.PAT_X_ASSUM `!x. P x` (MP_TAC o Q.SPEC `[]`)
        >> RW_TAC std_ss [EVERY_DEF, accepting_path_def])
    >> RW_TAC std_ss []
    >> RW_TAC std_ss [RIGHT_AND_OVER_OR, EXISTS_OR_THM]
@@ -339,7 +339,7 @@ val dijkstra = store_thm
        >> ONCE_REWRITE_TAC [PROVE [] ``a \/ b = ~a ==> b``]
        >> RW_TAC std_ss []
        >> STRIP_TAC
-       >> Q.PAT_ASSUM `!x. P x` (MP_TAC o Q.SPEC `k :: l'`)
+       >> Q.PAT_X_ASSUM `!x. P x` (MP_TAC o Q.SPEC `k :: l'`)
        >> RW_TAC std_ss [EVERY_DEF, accepting_path_def]
        >| [METIS_TAC [MEM_partition],
            MATCH_MP_TAC EVERY_MONO
@@ -366,9 +366,9 @@ val dijkstra = store_thm
    >> RW_TAC std_ss [EVERY_MEM, MEM_EL]
    >> CCONTR_TAC
    >> FULL_SIMP_TAC std_ss []
-   >> Q.PAT_ASSUM `!x. P x` (MP_TAC o Q.SPEC `BUTFIRSTN (SUC n) l'`)
+   >> Q.PAT_X_ASSUM `!x. P x` (MP_TAC o Q.SPEC `BUTFIRSTN (SUC n) l'`)
    >> RW_TAC std_ss []
-   >- (Q.PAT_ASSUM `EVERY P L` MP_TAC
+   >- (Q.PAT_X_ASSUM `EVERY P L` MP_TAC
        >> Q.SPEC_TAC (`EL n l'`, `s`)
        >> RW_TAC std_ss []
        >> Know `SUC n <= LENGTH l'` >- DECIDE_TAC
@@ -376,7 +376,7 @@ val dijkstra = store_thm
        >> MATCH_MP_TAC ALL_EL_BUTFIRSTN
        >> RW_TAC std_ss [])
    >> POP_ASSUM MP_TAC
-   >> Q.PAT_ASSUM `accepting_path t a k l'` MP_TAC
+   >> Q.PAT_X_ASSUM `accepting_path t a k l'` MP_TAC
    >> POP_ASSUM_LIST (K ALL_TAC)
    >> SIMP_TAC std_ss [AND_IMP_INTRO]
    >> Q.SPEC_TAC (`k`, `k`)
@@ -445,7 +445,7 @@ val tl_drop = store_thm
        >> FULL_SIMP_TAC arith_ss [LENGTH])
    >> Cases_on `l`
    >> RW_TAC arith_ss [drop_def, LENGTH, NULL_EQ_NIL, TL]
-   >> Q.PAT_ASSUM `!l. P l` (fn th => ONCE_REWRITE_TAC [th])
+   >> Q.PAT_X_ASSUM `!l. P l` (fn th => ONCE_REWRITE_TAC [th])
    >> FULL_SIMP_TAC arith_ss [LENGTH, drop_def, NULL_EQ_NIL]);
 
 val head_drop = store_thm
@@ -499,7 +499,7 @@ val da_accepts_def = Define
 val na2da_def = Define
   `na2da (n : ('a,'b) na) =
    ({initial n},
-    (\s c. {y | ?x. x IN s /\ transition n x c y}),
+    (\s c. {y | ?x. x IN s /\ (transition n) x c y}),
     (\s. ?x. x IN s /\ accept n x))`;
 
 val na2da_lemma = prove
@@ -548,7 +548,7 @@ val regexp2na_def = Define
         else if s' <= i2 then ?y. t1 (s - (i2 + 1)) x y /\ a1 y /\ t2 i2 x s'
         else t1 (s - (i2 + 1)) x (s' - (i2 + 1))),
      a2)) /\
-   (regexp2na (r1 | r2) =
+   (regexp2na (r1 || r2) =
     let (i1,t1,a1) = regexp2na r1 in
     let (i2,t2,a2) = regexp2na r2 in
     (i1 + i2 + 2,
@@ -594,7 +594,7 @@ val regexp2na_bounds = prove
        (regexp2na r = (i,trans,acc)) ==>
        (!s. acc s ==> s <= i) /\
        (!s x s'. trans s x s' ==> s <= i /\ s' <= i)``,
-   Induct
+   Induct (* 7 subgoals *)
    >| [(* Atom *)
        FULL_SIMP_TAC std_ss [regexp2na_def],
        (* # *)
@@ -606,11 +606,10 @@ val regexp2na_bounds = prove
        >> Introduce `regexp2na r2 = (i2,t2,a2)`
        >> STRIP_TAC
        >> REPEAT (POP_ASSUM MP_TAC)
-       >> RW_TAC std_ss []
+       >> RW_TAC std_ss [] (* 3 subgoals *)
        >> POP_ASSUM MP_TAC
        >> RW_TAC std_ss []
-       >> Know `!j. j - (i2 + 1) <= i1 ==> j <= i1 + i2 + 1` >- DECIDE_TAC
-       >> METIS_TAC [LESS_EQ_TRANS, LESS_EQ_ADD, ADD_COMM, LESS_EQ_REFL],
+       >> RES_TAC >> fs [],
        (* % *)
        Introduce `r = r1`
        >> Introduce `r' = r2`
@@ -622,9 +621,8 @@ val regexp2na_bounds = prove
        >> RW_TAC std_ss []
        >> POP_ASSUM MP_TAC
        >> RW_TAC std_ss []
-       >> Know `!j. j - (i2 + 1) <= i1 ==> j <= i1 + i2 + 1` >- DECIDE_TAC
-       >> METIS_TAC [LESS_EQ_TRANS, LESS_EQ_ADD, ADD_COMM],
-       (* | *)
+       >> RES_TAC >> fs [],
+       (* || *)
        Introduce `r = r1`
        >> Introduce `r' = r2`
        >> REPEAT GEN_TAC
@@ -633,8 +631,7 @@ val regexp2na_bounds = prove
        >> Introduce `regexp2na r2 = (i2,t2,a2)`
        >> REPEAT (POP_ASSUM MP_TAC)
        >> (RW_TAC std_ss [] >> POP_ASSUM MP_TAC >> RW_TAC std_ss [])
-       >> Know `!j. j - (i1 + 1) <= i2 ==> j <= i1 + i2 + 2` >- DECIDE_TAC
-       >> METIS_TAC [LESS_EQ_TRANS, LESS_EQ_ADD, ADD_COMM, LESS_EQ_REFL],
+       >> RES_TAC >> fs [],
        (* & *)
        Introduce `r = r1`
        >> Introduce `r' = r2`
@@ -642,8 +639,8 @@ val regexp2na_bounds = prove
        >> SIMP_TAC std_ss [regexp2na_def]
        >> Introduce `regexp2na r1 = (i1,t1,a1)`
        >> Introduce `regexp2na r2 = (i2,t2,a2)`
-       >> Q.PAT_ASSUM `!i. P i` (MP_TAC o Q.SPECL [`i2`,`t2`,`a2`])
-       >> Q.PAT_ASSUM `!i. P i` (MP_TAC o Q.SPECL [`i1`,`t1`,`a1`])
+       >> Q.PAT_X_ASSUM `!i. P i` (MP_TAC o Q.SPECL [`i2`,`t2`,`a2`])
+       >> Q.PAT_X_ASSUM `!i. P i` (MP_TAC o Q.SPECL [`i1`,`t1`,`a1`])
        >> SIMP_TAC std_ss []
        >> REPEAT (DISCH_THEN STRIP_ASSUME_TAC)
        >> CONJ_TAC
@@ -655,7 +652,7 @@ val regexp2na_bounds = prove
            >> MATCH_MP_TAC LESS_EQ_TRANS
            >> Q.EXISTS_TAC `(s DIV (i2 + 1)) * (i2 + 1) + i2`
            >> SIMP_TAC std_ss [ADD_MONO_LESS_EQ, LESS_EQ_MONO_ADD_EQ]
-           >> CONJ_TAC >- METIS_TAC []
+           >> CONJ_TAC >- (RES_TAC >> fs [])
            >> Know `!m n. m * n + m = m * (n + 1)`
            >- METIS_TAC [MULT_CLAUSES, ADD1, MULT_COMM]
            >> DISCH_THEN (fn th => REWRITE_TAC [th])
@@ -669,7 +666,7 @@ val regexp2na_bounds = prove
                >> MATCH_MP_TAC LESS_EQ_TRANS
                >> Q.EXISTS_TAC `(s DIV (i2 + 1)) * (i2 + 1) + i2`
                >> SIMP_TAC std_ss [ADD_MONO_LESS_EQ, LESS_EQ_MONO_ADD_EQ]
-               >> CONJ_TAC >- METIS_TAC []
+               >> CONJ_TAC >- (RES_TAC >> fs [])
                >> Know `!m n. m * n + m = m * (n + 1)`
                >- METIS_TAC [MULT_CLAUSES, ADD1, MULT_COMM]
                >> DISCH_THEN (fn th => REWRITE_TAC [th])
@@ -681,7 +678,7 @@ val regexp2na_bounds = prove
                >> MATCH_MP_TAC LESS_EQ_TRANS
                >> Q.EXISTS_TAC `(s' DIV (i2 + 1)) * (i2 + 1) + i2`
                >> SIMP_TAC std_ss [ADD_MONO_LESS_EQ, LESS_EQ_MONO_ADD_EQ]
-               >> CONJ_TAC >- METIS_TAC []
+               >> CONJ_TAC >- (RES_TAC >> fs [])
                >> Know `!m n. m * n + m = m * (n + 1)`
                >- METIS_TAC [MULT_CLAUSES, ADD1, MULT_COMM]
                >> DISCH_THEN (fn th => REWRITE_TAC [th])
@@ -734,7 +731,7 @@ val na_match_concat = prove
    >> Introduce `regexp2na r2 = (i2, t2, a2)`
    >> NTAC 2 (RW_TAC std_ss [regexp2na_def, sem_def, na_accepts_def])
    >> RW_TAC std_ss [regexp2na_def, sem_def, na_accepts_def]
-   >> REPEAT (Q.PAT_ASSUM `!x. P x` (fn th => REWRITE_TAC [GSYM th]))
+   >> REPEAT (Q.PAT_X_ASSUM `!x. P x` (fn th => REWRITE_TAC [GSYM th]))
    >> Suff
       `!k.
          na_step
@@ -804,7 +801,7 @@ val na_match_fuse = prove
    >> Introduce `regexp2na r1 = (i1, t1, a1)`
    >> Introduce `regexp2na r2 = (i2, t2, a2)`
    >> NTAC 2 (RW_TAC std_ss [regexp2na_def, sem_def, na_accepts_def])
-   >> REPEAT (Q.PAT_ASSUM `!x. P x` (fn th => REWRITE_TAC [GSYM th]))
+   >> REPEAT (Q.PAT_X_ASSUM `!x. P x` (fn th => REWRITE_TAC [GSYM th]))
    >> Suff
       `!k.
          na_step
@@ -871,12 +868,12 @@ val na_match_or = prove
   (``!r1 r2.
        (!l. na_accepts (regexp2na r1) l = sem r1 l) /\
        (!l. na_accepts (regexp2na r2) l = sem r2 l) ==>
-       !l. na_accepts (regexp2na (r1 | r2)) l = sem (r1 | r2) l``,
+       !l. na_accepts (regexp2na (r1 || r2)) l = sem (r1 || r2) l``,
    REPEAT GEN_TAC
    >> Introduce `regexp2na r1 = (i1, t1, a1)`
    >> Introduce `regexp2na r2 = (i2, t2, a2)`
    >> NTAC 2 (RW_TAC std_ss [regexp2na_def, sem_def, na_accepts_def])
-   >> REPEAT (Q.PAT_ASSUM `!x. P x` (fn th => REWRITE_TAC [GSYM th]))
+   >> REPEAT (Q.PAT_X_ASSUM `!x. P x` (fn th => REWRITE_TAC [GSYM th]))
    >> Cases_on `l` >- RW_TAC std_ss [na_step_def]
    >> RW_TAC std_ss [na_step_def]
    >> HO_MATCH_MP_TAC
@@ -901,10 +898,10 @@ val na_match_or = prove
                (!x : num. P x ==> (Q x = R x)) ==>
                ((?x. P x /\ Q x) = (?x. P x /\ R x))``)
        >> RW_TAC std_ss []
-       >> Know `s'' <= i1` >- METIS_TAC [regexp2na_trans]
+       >> Know `s''' <= i1` >- METIS_TAC [regexp2na_trans] (* was: s'' *)
        >> POP_ASSUM (K ALL_TAC)
        >> STRIP_TAC
-       >> Q.PAT_ASSUM `!k. P k` (MP_TAC o Q.SPEC `s''`)
+       >> Q.PAT_X_ASSUM `!k. P k` (MP_TAC o Q.SPEC `s'''`)
        >> RW_TAC arith_ss [])
    >> HO_MATCH_MP_TAC
       (METIS_PROVE []
@@ -920,9 +917,9 @@ val na_match_or = prove
    >> RW_TAC arith_ss []
    >> MATCH_MP_TAC (PROVE [] ``!x y z. (x ==> (y = z)) ==> (x /\ y = x /\ z)``)
    >> STRIP_TAC
-   >> Know `s' <= i2` >- METIS_TAC [regexp2na_trans]
+   >> Know `s'' <= i2` >- METIS_TAC [regexp2na_trans] (* was: s' *)
    >> POP_ASSUM (K ALL_TAC)
-   >> Q.SPEC_TAC (`s'`, `k`)
+   >> Q.SPEC_TAC (`s''`, `k`)
    >> Induct_on `t` >- RW_TAC arith_ss [na_step_def]
    >> RW_TAC arith_ss [na_step_def]
    >> HO_MATCH_MP_TAC
@@ -932,7 +929,7 @@ val na_match_or = prove
            (!x : num. P (x + (i1 + 1)) = Q x) ==>
            ((?x. P x) = (?x. Q x))``)
    >> CONJ_TAC
-   >- (Q.PAT_ASSUM `!x. P x` (K ALL_TAC)
+   >- (Q.PAT_X_ASSUM `!x. P x` (K ALL_TAC)
        >> RW_TAC std_ss []
        >> Q.EXISTS_TAC `s' - (i1 + 1)`
        >> POP_ASSUM (K ALL_TAC)
@@ -940,8 +937,8 @@ val na_match_or = prove
    >> RW_TAC arith_ss []
    >> MATCH_MP_TAC (PROVE [] ``!x y z. (x ==> (y = z)) ==> (x /\ y = x /\ z)``)
    >> STRIP_TAC
-   >> Q.PAT_ASSUM `!x. P x` (MP_TAC o Q.SPEC `s'`)
-   >> Know `s' <= i2` >- METIS_TAC [regexp2na_trans]
+   >> Q.PAT_X_ASSUM `!x. P x` (MP_TAC o Q.SPEC `s''`) (* was: s' *)
+   >> Know `s'' <= i2` >- METIS_TAC [regexp2na_trans]
    >> RW_TAC arith_ss []);
 
 val na_match_and = prove
@@ -953,7 +950,7 @@ val na_match_and = prove
    >> Introduce `regexp2na r1 = (i1, t1, a1)`
    >> Introduce `regexp2na r2 = (i2, t2, a2)`
    >> NTAC 2 (RW_TAC std_ss [regexp2na_def, sem_def, na_accepts_def])
-   >> REPEAT (Q.PAT_ASSUM `!x. P x` (fn th => REWRITE_TAC [GSYM th]))
+   >> REPEAT (Q.PAT_X_ASSUM `!x. P x` (fn th => REWRITE_TAC [GSYM th]))
    >> Suff
       `!j k.
          j <= i1 /\ k <= i2 ==>
@@ -989,7 +986,7 @@ val na_match_and = prove
    >> Q.EXISTS_TAC `\x. x DIV (i2 + 1) <= i1 /\ x MOD (i2 + 1) <= i2`
    >> BETA_TAC
    >> CONJ_TAC >- METIS_TAC [regexp2na_trans]
-   >> Q.PAT_ASSUM `!x. P x` (fn th => RW_TAC std_ss [th])
+   >> Q.PAT_X_ASSUM `!x. P x` (fn th => RW_TAC std_ss [th])
    >> HO_MATCH_MP_TAC
       (METIS_PROVE []
        ``!P A B C.
@@ -998,8 +995,8 @@ val na_match_and = prove
    >> CONJ_TAC >- METIS_TAC [regexp2na_trans]
    >> EQ_TAC >- METIS_TAC []
    >> RW_TAC std_ss []
-   >> Q.EXISTS_TAC `s' * (i2 + 1) + s''`
-   >> Know `s'' <= i2` >- METIS_TAC [regexp2na_trans]
+   >> Q.EXISTS_TAC `s'' * (i2 + 1) + s'''` (* was: s', s'' *)
+   >> Know `s''' <= i2` >- METIS_TAC [regexp2na_trans]
    >> RW_TAC std_ss [DIV_MULT, MOD_MULT]);
 
 val na_match_repeat = prove
@@ -1009,7 +1006,7 @@ val na_match_repeat = prove
    REPEAT GEN_TAC
    >> Introduce `regexp2na r = (i, t, a)`
    >> (NTAC 2 (RW_TAC std_ss [regexp2na_def, sem_def, na_accepts_def])
-       >> (REPEAT o Q.PAT_ASSUM `!x. P x`)
+       >> (REPEAT o Q.PAT_X_ASSUM `!x. P x`)
           (fn th => REWRITE_TAC [GSYM (MATCH_MP EQ_EXT th)]))
    >- (HO_MATCH_MP_TAC
        (METIS_PROVE [list_CASES]
@@ -1073,7 +1070,7 @@ val na_match_repeat = prove
    >> CONJ_TAC >- METIS_TAC [regexp2na_trans]
    >> Induct_on `t'`
    >- (RW_TAC arith_ss [na_step_def, APPEND_eq_NIL]
-       >> REVERSE (Cases_on `a s'`) >- RW_TAC std_ss []
+       >> REVERSE (Cases_on `a s''`) >- RW_TAC std_ss [] (* was: s' *)
        >> RW_TAC std_ss []
        >> Q.EXISTS_TAC `[]`
        >> RW_TAC std_ss [CONCAT_def, ALL_EL])
@@ -1093,7 +1090,7 @@ val na_match_repeat = prove
        >> Q.EXISTS_TAC `\x. x <= i`
        >> BETA_TAC
        >> CONJ_TAC >- METIS_TAC [regexp2na_trans]
-       >> Q.PAT_ASSUM `!x. P x` (fn th => RW_TAC std_ss [th])
+       >> Q.PAT_X_ASSUM `!x. P x` (fn th => RW_TAC std_ss [th])
        >> HO_MATCH_MP_TAC
           (METIS_PROVE []
            ``!P A B C.
@@ -1101,7 +1098,7 @@ val na_match_repeat = prove
                ((?x. A x /\ (P x ==> B x)) = C)``)
        >> CONJ_TAC >- METIS_TAC [regexp2na_trans]
        >> METIS_TAC [])
-   >> REVERSE (Cases_on `a s'`) >- RW_TAC std_ss []
+   >> REVERSE (Cases_on `a s''`) >- RW_TAC std_ss [] (* was: s'' *)
    >> RW_TAC std_ss []
    >> HO_MATCH_MP_TAC
       (METIS_PROVE []
@@ -1136,7 +1133,7 @@ val na_match_prefix = prove
    REPEAT GEN_TAC
    >> Introduce `regexp2na r = (i, t, a)`
    >> (NTAC 2 (RW_TAC std_ss [regexp2na_def, sem_def, na_accepts_def])
-       >> (REPEAT o Q.PAT_ASSUM `!x. P x`)
+       >> (REPEAT o Q.PAT_X_ASSUM `!x. P x`)
           (fn th => REWRITE_TAC [GSYM (MATCH_MP EQ_EXT th)]))
    >> Suff
       `!k.
@@ -1243,7 +1240,7 @@ val initial_regexp2na = store_thm
       initial_regexp2na r1 + initial_regexp2na r2 + 1) /\
      (initial_regexp2na (r1 % r2) =
       initial_regexp2na r1 + initial_regexp2na r2 + 1) /\
-     (initial_regexp2na (r1 | r2) =
+     (initial_regexp2na (r1 || r2) =
       initial_regexp2na r1 + initial_regexp2na r2 + 2) /\
      (initial_regexp2na (r1 & r2) =
       let i1 = initial_regexp2na r1 in
@@ -1269,7 +1266,7 @@ val accept_regexp2na = store_thm
       else accept_regexp2na r2 i2 /\
            accept_regexp2na r1 (s - (i2 + 1))) /\
      (accept_regexp2na (r1 % r2) s = accept_regexp2na r2 s) /\
-     (accept_regexp2na (r1 | r2) s =
+     (accept_regexp2na (r1 || r2) s =
       let i1 = initial_regexp2na r1 in
       let i2 = initial_regexp2na r2 in
       if s = i1 + i2 + 2 then
@@ -1350,7 +1347,7 @@ val transition_regexp2na = store_thm
         transition_regexp2na_fuse (accept_regexp2na r1)
         (transition_regexp2na r1 (s - (i2 + 1)) x) (SUC i1)
       else transition_regexp2na r1 (s - (i2 + 1)) x (s' - (i2 + 1))) /\
-     (transition_regexp2na (r1 | r2) s x s' =
+     (transition_regexp2na (r1 || r2) s x s' =
       let i1 = initial_regexp2na r1 in
       let i2 = initial_regexp2na r2 in
       if s = i1 + i2 + 2 then
@@ -1487,7 +1484,9 @@ val da_step_regexp2na = prove
        >> RW_TAC std_ss [MEM, transition_def]
        >> METIS_TAC [regexp2na_trans])
    >> Q.SPEC_TAC (`SUC i`, `n`)
-   >> Induct
+   >> Induct (* 2 subgoals *)
+   >- RW_TAC arith_ss
+      [calc_transitions_def, EXISTS_MEM, MEM, transition_regexp2na_def]
    >> RW_TAC arith_ss
       [calc_transitions_def, EXISTS_MEM, MEM, transition_regexp2na_def]
    >> Know `!a b. ~(a < b) /\ a < SUC b = (a = b)` >- DECIDE_TAC
